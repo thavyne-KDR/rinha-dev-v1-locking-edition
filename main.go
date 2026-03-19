@@ -50,7 +50,10 @@ func main() {
 	server := &http.Server{
 		Addr:              ":8080",
 		Handler:           mux,
-		ReadHeaderTimeout: 3 * time.Second,
+		ReadHeaderTimeout: 2 * time.Second,
+		ReadTimeout:       3 * time.Second,
+		WriteTimeout:      3 * time.Second,
+		IdleTimeout:       15 * time.Second,
 	}
 
 	log.Println("API rodando na porta 8080")
@@ -66,7 +69,7 @@ func buildDSN() string {
 	pass := getEnv("DB_PASS", "123")
 	name := getEnv("DB_NAME", "rinha")
 
-	return "postgres://" + user + ":" + pass + "@" + host + ":" + port + "/" + name + "?pool_max_conns=10"
+	return "postgres://" + user + ":" + pass + "@" + host + ":" + port + "/" + name + "?pool_max_conns=8"
 }
 
 func getEnv(key, fallback string) string {
@@ -114,7 +117,7 @@ func handleListarEventos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(eventos)
+	_ = json.NewEncoder(w).Encode(eventos)
 }
 
 func handleReservar(w http.ResponseWriter, r *http.Request) {
@@ -193,9 +196,5 @@ func handleReservar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"mensagem": "reserva realizada com sucesso",
-	})
 }
